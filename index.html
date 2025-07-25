@@ -6,97 +6,129 @@
   <title>动态视频封面生成器</title>
   <style>
     body {
-      font-family: 'Microsoft YaHei', 'Arial', sans-serif;
+      font-family: 'Segoe UI', 'Microsoft YaHei', 'Arial', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 30px;
-      background-color: #f5f5f5;
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e0e7ff 0%, #f5f5f5 100%);
     }
     h1 {
-      color: #333;
-      margin-bottom: 25px;
+      color: #3b2f7f;
+      margin-top: 40px;
+      margin-bottom: 10px;
+      font-size: 2.5rem;
+      letter-spacing: 2px;
+      font-weight: 800;
+      text-shadow: 0 2px 8px #e0e7ff;
+    }
+    .subtitle {
+      color: #6b7280;
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+      letter-spacing: 1px;
     }
     canvas {
-      width: 800px;
-      height: 450px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
-      background-color: black;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border-radius: 18px;
+      border: 1.5px solid #d1d5db;
+      margin-bottom: 18px;
+      background-color: #18181b;
+      box-shadow: 0 6px 24px rgba(60,60,120,0.10);
+      transition: box-shadow 0.2s;
+    }
+    canvas:hover {
+      box-shadow: 0 12px 32px rgba(60,60,120,0.18);
+      transform: scale(1.03);
+      z-index: 2;
     }
     img {
-      border: 1px solid #ddd;
-      max-width: 800px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      max-width: 100%;
       height: auto;
-      margin-top: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      margin-top: 18px;
+      box-shadow: 0 4px 16px rgba(60,60,120,0.10);
     }
     button {
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 12px 28px;
+      font-size: 1.1rem;
       cursor: pointer;
-      background-color: #007bff;
+      background: linear-gradient(90deg, #6366f1 0%, #f59e42 100%);
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       margin-top: 10px;
-      transition: background-color 0.3s ease;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.08);
+      transition: background 0.3s, box-shadow 0.2s, transform 0.2s;
     }
     button:hover {
-      background-color: #0056b3;
+      background: linear-gradient(90deg, #f59e42 0%, #6366f1 100%);
+      box-shadow: 0 4px 16px rgba(99,102,241,0.16);
+      transform: translateY(-2px) scale(1.04);
     }
     .controls {
-      margin-bottom: 25px;
-      padding: 25px;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      background-color: white;
+      margin-bottom: 30px;
+      padding: 32px 32px 24px 32px;
+      border-radius: 18px;
+      background: white;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      width: 450px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      gap: 16px;
+      width: 420px;
+      box-shadow: 0 4px 24px rgba(99,102,241,0.08);
+      border: 1.5px solid #e0e7ff;
     }
     .controls label {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 15px;
-      color: #555;
+      font-size: 1rem;
+      color: #444;
+      font-weight: 500;
+      letter-spacing: 0.5px;
     }
     .controls input[type="text"],
     .controls input[type="number"] {
       flex-grow: 1;
-      margin-left: 15px;
-      padding: 9px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 15px;
-      transition: border-color 0.3s ease;
+      margin-left: 18px;
+      padding: 10px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 7px;
+      font-size: 1rem;
+      transition: border-color 0.3s, box-shadow 0.2s;
+      background: #f8fafc;
+      outline: none;
     }
     .controls input[type="text"]:focus,
     .controls input[type="number"]:focus {
-      border-color: #007bff;
-      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px #6366f133;
     }
     .controls input[type="color"] {
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
-      border: 1px solid #ddd;
-      width: 50px;
-      height: 30px;
-      border-radius: 4px;
+      border: 1.5px solid #d1d5db;
+      width: 48px;
+      height: 32px;
+      border-radius: 7px;
       cursor: pointer;
-      margin-left: 15px;
+      margin-left: 18px;
+      background: #f8fafc;
+      transition: border-color 0.3s;
+    }
+    .controls input[type="color"]:focus {
+      border-color: #6366f1;
     }
     .controls input[type="color"]::-webkit-color-swatch-wrapper {
       padding: 0;
+      border-radius: 7px;
     }
     .controls input[type="color"]::-webkit-color-swatch {
       border: none;
-      border-radius: 3px;
+      border-radius: 6px;
     }
     #imageContainer {
       margin-top: 30px;
@@ -106,55 +138,112 @@
       color: #333;
       margin-bottom: 15px;
     }
+    .preview-area {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .preview-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(99,102,241,0.08);
+      border: 1.5px solid #e0e7ff;
+      padding: 28px 18px 18px 18px;
+      min-width: 220px;
+      margin-bottom: 10px;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .preview-card:hover {
+      box-shadow: 0 8px 32px rgba(99,102,241,0.16);
+      transform: scale(1.03);
+    }
+    .preview-card .card-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #6366f1;
+      font-size: 1.08rem;
+      letter-spacing: 1px;
+    }
+    @media (max-width: 900px) {
+      .preview-area {
+        flex-direction: column;
+        gap: 24px;
+      }
+      .controls {
+        width: 98vw;
+        min-width: 0;
+        max-width: 99vw;
+        padding: 18px 4vw 14px 4vw;
+      }
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5rem; }
+      .subtitle { font-size: 0.95rem; }
+      .controls label { font-size: 0.95rem; }
+      .preview-card { padding: 16px 2vw 10px 2vw; }
+    }
   </style>
 </head>
 <body>
 
   <h1>动态视频封面生成器</h1>
+  <div class="subtitle">一键生成高清 16:9 / 9:16 视频封面，支持自定义标题、按钮、颜色和样式</div>
 
   <div class="controls">
-    <label>标题文字: <input type="text" id="titleText" value="电商猫" /></label>
-    <label>标题颜色: <input type="color" id="titleColor" value="#FFFFFF" /></label>
-    <label>标题字号: <input type="number" id="titleFontSize" value="40" min="10" max="200" /></label>
-    <label>按钮文字: <input type="text" id="buttonText" value="效果展示" /></label>
-    <label>按钮颜色: <input type="color" id="buttonColor" value="#FF9933" /></label>
-    <label>按钮文字颜色: <input type="color" id="buttonTextColor" value="#000000" /></label>
-    <label>按钮字号: <input type="number" id="buttonFontSize" value="40" min="10" max="100" /></label>
-    <label>按钮内边距: <input type="number" id="buttonPadding" value="40" min="0" max="200" /></label>
-    <label>背景颜色: <input type="color" id="bgColor" value="#000000" /></label>
+    <label>标题文字 <input type="text" id="titleText" value="悟空软件开发记" /></label>
+    <label>标题颜色 <input type="color" id="titleColor" value="#FFFFFF" /></label>
+    <label>标题字号 <input type="number" id="titleFontSize" value="30" min="10" max="200" /></label>
+    <label>按钮文字 <input type="text" id="buttonText" value="每周一个电脑小技巧" /></label>
+    <label>按钮颜色 <input type="color" id="buttonColor" value="#FF9933" /></label>
+    <label>按钮文字颜色 <input type="color" id="buttonTextColor" value="#000000" /></label>
+    <label>按钮字号 <input type="number" id="buttonFontSize" value="30" min="10" max="100" /></label>
+    <label>按钮内边距 <input type="number" id="buttonPadding" value="40" min="0" max="200" /></label>
+    <label>背景颜色 <input type="color" id="bgColor" value="#000000" /></label>
     <button id="updateCanvasBtn">更新封面预览</button>
   </div>
 
-  <canvas id="myCanvas" width="800" height="450"></canvas>
-
-  <button id="convertToImageBtn">将 Canvas 转换为图片并下载</button>
-
-  <div id="imageContainer"></div>
+  <div class="preview-area">
+    <div class="preview-card">
+      <div class="card-title">16:9 封面预览</div>
+      <canvas id="canvas169" width="800" height="450" style="width: 320px; height: 180px;"></canvas>
+      <button id="download169">下载 16:9 封面</button>
+      <div id="imgContainer169"></div>
+    </div>
+    <div class="preview-card">
+      <div class="card-title">9:16 封面预览</div>
+      <canvas id="canvas916" width="450" height="800" style="width: 180px; height: 320px;"></canvas>
+      <button id="download916">下载 9:16 封面</button>
+      <div id="imgContainer916"></div>
+    </div>
+  </div>
 
   <script>
-    const canvas = document.getElementById('myCanvas');
-    const actualWidth = 800;
-    const actualHeight = 450;
-    const renderingScale = 2;
+    // 高清缩放因子
+    const scale = 4;
+    // 公共参数
+    const controls = {
+      titleTextElem: document.getElementById('titleText'),
+      titleColorElem: document.getElementById('titleColor'),
+      titleFontSizeElem: document.getElementById('titleFontSize'),
+      buttonTextElem: document.getElementById('buttonText'),
+      buttonColorElem: document.getElementById('buttonColor'),
+      buttonTextColorElem: document.getElementById('buttonTextColor'),
+      buttonFontSizeElem: document.getElementById('buttonFontSize'),
+      buttonPaddingElem: document.getElementById('buttonPadding'),
+      bgColorElem: document.getElementById('bgColor'),
+    };
 
-    canvas.width = actualWidth * renderingScale;
-    canvas.height = actualHeight * renderingScale;
-
-    const ctx = canvas.getContext('2d');
-    ctx.scale(renderingScale, renderingScale);
-
-    const titleTextElem = document.getElementById('titleText');
-    const titleColorElem = document.getElementById('titleColor');
-    const titleFontSizeElem = document.getElementById('titleFontSize');
-    const buttonTextElem = document.getElementById('buttonText');
-    const buttonColorElem = document.getElementById('buttonColor');
-    const buttonTextColorElem = document.getElementById('buttonTextColor');
-    const buttonFontSizeElem = document.getElementById('buttonFontSize');
-    const buttonPaddingElem = document.getElementById('buttonPadding');
-    const bgColorElem = document.getElementById('bgColor');
-    const updateCanvasBtn = document.getElementById('updateCanvasBtn');
-    const convertToImageBtn = document.getElementById('convertToImageBtn');
-    const imageContainer = document.getElementById('imageContainer');
+    function setCanvasSize(canvas, w, h) {
+      canvas.width = w * scale;
+      canvas.height = h * scale;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+    }
 
     function drawRoundedRect(ctx, x, y, width, height, radius) {
       ctx.beginPath();
@@ -171,54 +260,67 @@
       ctx.fill();
     }
 
-    function drawCanvas() {
-      ctx.clearRect(0, 0, actualWidth, actualHeight);
+    function drawCanvas(canvas, params, baseW, baseH) {
+      // 保证 canvas 尺寸为高清
+      setCanvasSize(canvas, baseW, baseH);
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // 重置变换
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // 背景
-      ctx.fillStyle = bgColorElem.value;
-      ctx.fillRect(0, 0, actualWidth, actualHeight);
+      ctx.fillStyle = params.bgColorElem.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 标题和按钮整体垂直居中
+      const titleFontSize = parseInt(params.titleFontSizeElem.value, 10) * scale;
+      const buttonFontSize = parseInt(params.buttonFontSizeElem.value, 10) * scale;
+      const buttonPaddingX = parseInt(params.buttonPaddingElem.value, 10) * scale; // 水平内边距
+      const buttonPaddingY = 12 * scale; // 垂直内边距固定
+      const buttonContentText = params.buttonTextElem.value;
+
+      // 按钮高度自适应：字号+上下内边距*2，最小高度40
+      const buttonHeight = Math.max(buttonFontSize + buttonPaddingY * 2, 40 * scale);
+      // 标题和按钮之间的间距
+      const gap = Math.max(canvas.height * 0.04, 20 * scale);
+      // 总高度
+      const totalHeight = titleFontSize + gap + buttonHeight;
+      // 起始Y（整体垂直居中）
+      const startY = (canvas.height - totalHeight) / 2;
 
       // 标题文字
-      const titleY = actualHeight * 0.4;
-      ctx.font = `${titleFontSizeElem.value}px 'Microsoft YaHei', sans-serif`;
-      ctx.fillStyle = titleColorElem.value;
+      const titleY = startY + titleFontSize / 2;
+      ctx.font = `${titleFontSize}px 'Microsoft YaHei', sans-serif`;
+      ctx.fillStyle = params.titleColorElem.value;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(titleTextElem.value, actualWidth / 2, titleY);
+      ctx.fillText(params.titleTextElem.value, canvas.width / 2, titleY);
 
       // 按钮
-      const buttonContentText = buttonTextElem.value;
-      const buttonContentFontSize = buttonFontSizeElem.value;
-      const buttonContentPadding = parseInt(buttonPaddingElem.value, 10);
-
-      ctx.font = `${buttonContentFontSize}px 'Microsoft YaHei', sans-serif`;
+      ctx.font = `${buttonFontSize}px 'Microsoft YaHei', sans-serif`;
       const textMetrics = ctx.measureText(buttonContentText);
       const textWidth = textMetrics.width;
-
-      const buttonHeight = 100;
-      const minButtonWidth = 150;
-      const dynamicButtonWidth = textWidth + buttonContentPadding * 2;
+      const minButtonWidth = Math.round(canvas.width * 0.18);
+      const dynamicButtonWidth = textWidth + buttonPaddingX * 2;
       const buttonWidth = Math.max(minButtonWidth, dynamicButtonWidth);
+      const buttonX = (canvas.width - buttonWidth) / 2;
+      const buttonY = titleY + titleFontSize / 2 + gap;
 
-      const buttonX = (actualWidth - buttonWidth) / 2;
-      const buttonY = actualHeight * 0.65 - buttonHeight / 2;
+      ctx.fillStyle = params.buttonColorElem.value;
+      drawRoundedRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 10 * scale);
 
-      ctx.fillStyle = buttonColorElem.value;
-      drawRoundedRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 10);
-
-      ctx.fillStyle = buttonTextColorElem.value;
-      ctx.fillText(buttonContentText, actualWidth / 2, actualHeight * 0.65);
+      ctx.fillStyle = params.buttonTextColorElem.value;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(buttonContentText, canvas.width / 2, buttonY + buttonHeight / 2);
     }
 
-    drawCanvas();
+    // 预览和下载逻辑
+    function updateAllCanvases() {
+      drawCanvas(document.getElementById('canvas169'), controls, 800, 450);
+      drawCanvas(document.getElementById('canvas916'), controls, 450, 800);
+    }
 
-    updateCanvasBtn.addEventListener('click', drawCanvas);
-    document.querySelectorAll('.controls input').forEach(input => {
-      input.addEventListener('input', drawCanvas);
-    });
-
-    // 下载函数（用 Blob）
-    function saveImg(base64) {
+    function saveImg(base64, filename) {
       const base64Data = base64.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
@@ -230,28 +332,48 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'video_cover.png';
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
 
-    convertToImageBtn.addEventListener('click', () => {
-      const imageDataURL = canvas.toDataURL('image/png');
+    // 事件绑定
+    document.getElementById('updateCanvasBtn').addEventListener('click', updateAllCanvases);
+    document.querySelectorAll('.controls input').forEach(input => {
+      input.addEventListener('input', updateAllCanvases);
+    });
 
+    // 下载与预览 16:9
+    document.getElementById('download169').addEventListener('click', () => {
+      const canvas = document.getElementById('canvas169');
+      const imageDataURL = canvas.toDataURL('image/png');
       const img = document.createElement('img');
       img.src = imageDataURL;
-      img.alt = '生成的视频封面';
-      img.style.maxWidth = `${actualWidth}px`;
+      img.alt = '16:9 封面';
+      img.style.maxWidth = '320px';
       img.style.height = 'auto';
-
-      imageContainer.innerHTML = '<h2>生成的封面图片:</h2>';
-      imageContainer.appendChild(img);
-
-      // 调用下载
-      saveImg(imageDataURL);
+      document.getElementById('imgContainer169').innerHTML = '';
+      document.getElementById('imgContainer169').appendChild(img);
+      saveImg(imageDataURL, 'cover_16x9.png');
     });
+    // 下载与预览 9:16
+    document.getElementById('download916').addEventListener('click', () => {
+      const canvas = document.getElementById('canvas916');
+      const imageDataURL = canvas.toDataURL('image/png');
+      const img = document.createElement('img');
+      img.src = imageDataURL;
+      img.alt = '9:16 封面';
+      img.style.maxWidth = '180px';
+      img.style.height = 'auto';
+      document.getElementById('imgContainer916').innerHTML = '';
+      document.getElementById('imgContainer916').appendChild(img);
+      saveImg(imageDataURL, 'cover_9x16.png');
+    });
+
+    // 初始化
+    updateAllCanvases();
   </script>
 
 </body>
