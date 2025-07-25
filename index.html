@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>动态视频封面生成器</title>
+  <style>
+    body {
+      font-family: 'Microsoft YaHei', 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 30px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 25px;
+    }
+    canvas {
+      width: 800px;
+      height: 450px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      background-color: black;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    img {
+      border: 1px solid #ddd;
+      max-width: 800px;
+      height: auto;
+      margin-top: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .controls {
+      margin-bottom: 25px;
+      padding: 25px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 450px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .controls label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+      color: #555;
+    }
+    .controls input[type="text"],
+    .controls input[type="number"] {
+      flex-grow: 1;
+      margin-left: 15px;
+      padding: 9px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 15px;
+      transition: border-color 0.3s ease;
+    }
+    .controls input[type="text"]:focus,
+    .controls input[type="number"]:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+    .controls input[type="color"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: 1px solid #ddd;
+      width: 50px;
+      height: 30px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 15px;
+    }
+    .controls input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    .controls input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 3px;
+    }
+    #imageContainer {
+      margin-top: 30px;
+      text-align: center;
+    }
+    #imageContainer h2 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>动态视频封面生成器</h1>
+
+  <div class="controls">
+    <label>标题文字: <input type="text" id="titleText" value="电商猫" /></label>
+    <label>标题颜色: <input type="color" id="titleColor" value="#FFFFFF" /></label>
+    <label>标题字号: <input type="number" id="titleFontSize" value="40" min="10" max="200" /></label>
+    <label>按钮文字: <input type="text" id="buttonText" value="效果展示" /></label>
+    <label>按钮颜色: <input type="color" id="buttonColor" value="#FF9933" /></label>
+    <label>按钮文字颜色: <input type="color" id="buttonTextColor" value="#000000" /></label>
+    <label>按钮字号: <input type="number" id="buttonFontSize" value="40" min="10" max="100" /></label>
+    <label>按钮内边距: <input type="number" id="buttonPadding" value="40" min="0" max="200" /></label>
+    <label>背景颜色: <input type="color" id="bgColor" value="#000000" /></label>
+    <button id="updateCanvasBtn">更新封面预览</button>
+  </div>
+
+  <canvas id="myCanvas" width="800" height="450"></canvas>
+
+  <button id="convertToImageBtn">将 Canvas 转换为图片并下载</button>
+
+  <div id="imageContainer"></div>
+
+  <script>
+    const canvas = document.getElementById('myCanvas');
+    const actualWidth = 800;
+    const actualHeight = 450;
+    const renderingScale = 2;
+
+    canvas.width = actualWidth * renderingScale;
+    canvas.height = actualHeight * renderingScale;
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(renderingScale, renderingScale);
+
+    const titleTextElem = document.getElementById('titleText');
+    const titleColorElem = document.getElementById('titleColor');
+    const titleFontSizeElem = document.getElementById('titleFontSize');
+    const buttonTextElem = document.getElementById('buttonText');
+    const buttonColorElem = document.getElementById('buttonColor');
+    const buttonTextColorElem = document.getElementById('buttonTextColor');
+    const buttonFontSizeElem = document.getElementById('buttonFontSize');
+    const buttonPaddingElem = document.getElementById('buttonPadding');
+    const bgColorElem = document.getElementById('bgColor');
+    const updateCanvasBtn = document.getElementById('updateCanvasBtn');
+    const convertToImageBtn = document.getElementById('convertToImageBtn');
+    const imageContainer = document.getElementById('imageContainer');
+
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawCanvas() {
+      ctx.clearRect(0, 0, actualWidth, actualHeight);
+
+      // 背景
+      ctx.fillStyle = bgColorElem.value;
+      ctx.fillRect(0, 0, actualWidth, actualHeight);
+
+      // 标题文字
+      const titleY = actualHeight * 0.4;
+      ctx.font = `${titleFontSizeElem.value}px 'Microsoft YaHei', sans-serif`;
+      ctx.fillStyle = titleColorElem.value;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(titleTextElem.value, actualWidth / 2, titleY);
+
+      // 按钮
+      const buttonContentText = buttonTextElem.value;
+      const buttonContentFontSize = buttonFontSizeElem.value;
+      const buttonContentPadding = parseInt(buttonPaddingElem.value, 10);
+
+      ctx.font = `${buttonContentFontSize}px 'Microsoft YaHei', sans-serif`;
+      const textMetrics = ctx.measureText(buttonContentText);
+      const textWidth = textMetrics.width;
+
+      const buttonHeight = 100;
+      const minButtonWidth = 150;
+      const dynamicButtonWidth = textWidth + buttonContentPadding * 2;
+      const buttonWidth = Math.max(minButtonWidth, dynamicButtonWidth);
+
+      const buttonX = (actualWidth - buttonWidth) / 2;
+      const buttonY = actualHeight * 0.65 - buttonHeight / 2;
+
+      ctx.fillStyle = buttonColorElem.value;
+      drawRoundedRect(ctx, buttonX, buttonY, buttonWidth, buttonHeight, 10);
+
+      ctx.fillStyle = buttonTextColorElem.value;
+      ctx.fillText(buttonContentText, actualWidth / 2, actualHeight * 0.65);
+    }
+
+    drawCanvas();
+
+    updateCanvasBtn.addEventListener('click', drawCanvas);
+    document.querySelectorAll('.controls input').forEach(input => {
+      input.addEventListener('input', drawCanvas);
+    });
+
+    // 下载函数（用 Blob）
+    function saveImg(base64) {
+      const base64Data = base64.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/png' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'video_cover.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    convertToImageBtn.addEventListener('click', () => {
+      const imageDataURL = canvas.toDataURL('image/png');
+
+      const img = document.createElement('img');
+      img.src = imageDataURL;
+      img.alt = '生成的视频封面';
+      img.style.maxWidth = `${actualWidth}px`;
+      img.style.height = 'auto';
+
+      imageContainer.innerHTML = '<h2>生成的封面图片:</h2>';
+      imageContainer.appendChild(img);
+
+      // 调用下载
+      saveImg(imageDataURL);
+    });
+  </script>
+
+</body>
+</html>
