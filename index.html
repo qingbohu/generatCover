@@ -2,9 +2,13 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <title>动态视频封面生成器</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
       font-family: 'Segoe UI', 'Microsoft YaHei', 'Arial', sans-serif;
       display: flex;
@@ -13,179 +17,365 @@
       margin: 0;
       min-height: 100vh;
       background: linear-gradient(135deg, #e0e7ff 0%, #f5f5f5 100%);
+      padding: 10px;
     }
+    
     h1 {
       color: #3b2f7f;
-      margin-top: 40px;
-      margin-bottom: 10px;
-      font-size: 2.5rem;
-      letter-spacing: 2px;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      letter-spacing: 1px;
       font-weight: 800;
       text-shadow: 0 2px 8px #e0e7ff;
+      text-align: center;
+      line-height: 1.2;
     }
+    
     .subtitle {
       color: #6b7280;
-      font-size: 1.1rem;
-      margin-bottom: 30px;
-      letter-spacing: 1px;
+      font-size: clamp(0.9rem, 3vw, 1.1rem);
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+      text-align: center;
+      line-height: 1.4;
+      padding: 0 10px;
     }
+    
     canvas {
-      border-radius: 18px;
-      border: 1.5px solid #d1d5db;
-      margin-bottom: 18px;
-      background-color: #18181b;
-      box-shadow: 0 6px 24px rgba(60,60,120,0.10);
-      transition: box-shadow 0.2s;
-    }
-    canvas:hover {
-      box-shadow: 0 12px 32px rgba(60,60,120,0.18);
-      transform: scale(1.03);
-      z-index: 2;
-    }
-    img {
       border-radius: 12px;
+      border: 1.5px solid #d1d5db;
+      margin-bottom: 15px;
+      background-color: #18181b;
+      box-shadow: 0 4px 16px rgba(60,60,120,0.10);
+      transition: box-shadow 0.2s;
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    /* 16:9 画布样式 */
+    #canvas169 {
+      width: min(320px, 90vw);
+      height: auto;
+      aspect-ratio: 16/9;
+      object-fit: contain;
+    }
+    
+    /* 9:16 画布样式 */
+    #canvas916 {
+      width: min(180px, 50vw);
+      height: auto;
+      aspect-ratio: 9/16;
+      object-fit: contain;
+    }
+    
+    canvas:hover {
+      box-shadow: 0 8px 24px rgba(60,60,120,0.18);
+    }
+    
+    img {
+      border-radius: 8px;
       border: 1px solid #e5e7eb;
       max-width: 100%;
       height: auto;
-      margin-top: 18px;
-      box-shadow: 0 4px 16px rgba(60,60,120,0.10);
+      margin-top: 15px;
+      box-shadow: 0 2px 8px rgba(60,60,120,0.10);
     }
+    
     button {
-      padding: 12px 28px;
-      font-size: 1.1rem;
+      padding: clamp(10px, 3vw, 12px) clamp(20px, 5vw, 28px);
+      font-size: clamp(0.9rem, 3vw, 1.1rem);
       cursor: pointer;
       background: linear-gradient(90deg, #6366f1 0%, #f59e42 100%);
       color: white;
       border: none;
       border-radius: 8px;
-      margin-top: 10px;
+      margin-top: 8px;
       font-weight: 600;
       box-shadow: 0 2px 8px rgba(99,102,241,0.08);
       transition: background 0.3s, box-shadow 0.2s, transform 0.2s;
+      min-height: 44px; /* 移动端触摸友好 */
+      touch-action: manipulation;
     }
-    button:hover {
+    
+    button:hover, button:active {
       background: linear-gradient(90deg, #f59e42 0%, #6366f1 100%);
       box-shadow: 0 4px 16px rgba(99,102,241,0.16);
-      transform: translateY(-2px) scale(1.04);
+      transform: translateY(-1px) scale(1.02);
     }
+    
     .controls {
-      margin-bottom: 30px;
-      padding: 32px 32px 24px 32px;
-      border-radius: 18px;
+      margin-bottom: 20px;
+      padding: clamp(16px, 4vw, 32px);
+      border-radius: 16px;
       background: white;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      width: 420px;
+      gap: clamp(12px, 3vw, 16px);
+      width: min(95vw, 420px);
       box-shadow: 0 4px 24px rgba(99,102,241,0.08);
       border: 1.5px solid #e0e7ff;
     }
+    
     .controls label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: clamp(0.9rem, 3vw, 1rem);
+      color: #444;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    
+    .controls .label-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 1rem;
-      color: #444;
-      font-weight: 500;
-      letter-spacing: 0.5px;
+      flex-direction: row;
     }
+    
     .controls input[type="text"],
     .controls input[type="number"] {
-      flex-grow: 1;
-      margin-left: 18px;
-      padding: 10px 12px;
+      padding: clamp(8px, 2vw, 10px) clamp(10px, 3vw, 12px);
       border: 1.5px solid #d1d5db;
-      border-radius: 7px;
-      font-size: 1rem;
+      border-radius: 6px;
+      font-size: clamp(0.9rem, 3vw, 1rem);
       transition: border-color 0.3s, box-shadow 0.2s;
       background: #f8fafc;
       outline: none;
+      min-height: 44px; /* 移动端触摸友好 */
+      width: 100%;
     }
+    
     .controls input[type="text"]:focus,
     .controls input[type="number"]:focus {
       border-color: #6366f1;
       box-shadow: 0 0 0 2px #6366f133;
     }
+    
     .controls input[type="color"] {
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
       border: 1.5px solid #d1d5db;
-      width: 48px;
-      height: 32px;
-      border-radius: 7px;
+      width: clamp(40px, 12vw, 48px);
+      height: clamp(36px, 10vw, 32px);
+      border-radius: 6px;
       cursor: pointer;
-      margin-left: 18px;
       background: #f8fafc;
       transition: border-color 0.3s;
+      min-height: 44px; /* 移动端触摸友好 */
     }
+    
     .controls input[type="color"]:focus {
       border-color: #6366f1;
     }
+    
     .controls input[type="color"]::-webkit-color-swatch-wrapper {
       padding: 0;
-      border-radius: 7px;
-    }
-    .controls input[type="color"]::-webkit-color-swatch {
-      border: none;
       border-radius: 6px;
     }
+    
+    .controls input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 5px;
+    }
+    
     #imageContainer {
-      margin-top: 30px;
+      margin-top: 20px;
       text-align: center;
     }
+    
     #imageContainer h2 {
       color: #333;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
+      font-size: clamp(1rem, 4vw, 1.2rem);
     }
+    
+
+    
     .preview-area {
       display: flex;
-      gap: 40px;
-      margin-bottom: 36px;
+      gap: clamp(20px, 5vw, 40px);
+      margin-bottom: 20px;
       flex-wrap: wrap;
       justify-content: center;
+      width: 100%;
     }
+    
     .preview-card {
       display: flex;
       flex-direction: column;
       align-items: center;
       background: white;
-      border-radius: 18px;
+      border-radius: 16px;
       box-shadow: 0 4px 24px rgba(99,102,241,0.08);
       border: 1.5px solid #e0e7ff;
-      padding: 28px 18px 18px 18px;
-      min-width: 220px;
-      margin-bottom: 10px;
+      padding: clamp(16px, 4vw, 28px) clamp(12px, 3vw, 18px) clamp(12px, 3vw, 18px) clamp(12px, 3vw, 18px);
+      min-width: clamp(200px, 80vw, 220px);
+      max-width: 95vw;
+      margin-bottom: 8px;
       transition: box-shadow 0.2s, transform 0.2s;
     }
+    
     .preview-card:hover {
-      box-shadow: 0 8px 32px rgba(99,102,241,0.16);
-      transform: scale(1.03);
+      box-shadow: 0 6px 24px rgba(99,102,241,0.16);
+      transform: scale(1.02);
     }
+    
     .preview-card .card-title {
       font-weight: bold;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       color: #6366f1;
-      font-size: 1.08rem;
-      letter-spacing: 1px;
+      font-size: clamp(0.9rem, 3vw, 1.08rem);
+      letter-spacing: 0.5px;
+      text-align: center;
     }
-    @media (max-width: 900px) {
-      .preview-area {
-        flex-direction: column;
-        gap: 24px;
+    
+         /* 移动端优化 */
+     @media (max-width: 768px) {
+       body {
+         padding: 8px;
+       }
+       
+       h1 {
+         margin-top: 15px;
+         margin-bottom: 6px;
+       }
+       
+       .subtitle {
+         margin-bottom: 15px;
+         padding: 0 8px;
+       }
+       
+       .controls {
+         margin-bottom: 15px;
+         padding: 16px;
+         gap: 12px;
+       }
+       
+       .preview-area {
+         flex-direction: column;
+         gap: 16px;
+         margin-bottom: 15px;
+       }
+       
+       .preview-card {
+         padding: 16px 12px 12px 12px;
+         margin-bottom: 6px;
+       }
+       
+       /* 移动端画布尺寸优化 */
+       #canvas169 {
+         width: min(280px, 85vw);
+         height: auto;
+         aspect-ratio: 16/9;
+         object-fit: contain;
+       }
+       
+       #canvas916 {
+         width: min(160px, 45vw);
+         height: auto;
+         aspect-ratio: 9/16;
+         object-fit: contain;
+       }
+       
+       canvas {
+         margin-bottom: 12px;
+       }
+       
+       button {
+         margin-top: 6px;
+       }
+     }
+    
+         @media (max-width: 480px) {
+       body {
+         padding: 5px;
+       }
+       
+       .controls {
+         padding: 12px;
+         gap: 10px;
+       }
+       
+       .controls label {
+         gap: 6px;
+       }
+       
+       .controls input[type="text"],
+       .controls input[type="number"] {
+         padding: 10px 8px;
+       }
+       
+       .preview-card {
+         padding: 12px 8px 8px 8px;
+       }
+       
+       /* 小屏手机画布尺寸优化 */
+       #canvas169 {
+         width: min(240px, 80vw);
+         height: auto;
+         aspect-ratio: 16/9;
+         object-fit: contain;
+       }
+       
+       #canvas916 {
+         width: min(140px, 40vw);
+         height: auto;
+         aspect-ratio: 9/16;
+         object-fit: contain;
+       }
+       
+       canvas {
+         border-radius: 8px;
+         margin-bottom: 10px;
+       }
+     }
+    
+    /* 横屏优化 */
+    @media (orientation: landscape) and (max-height: 600px) {
+      body {
+        padding: 5px;
       }
+      
+      h1 {
+        margin-top: 10px;
+        margin-bottom: 4px;
+        font-size: 1.5rem;
+      }
+      
+      .subtitle {
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+      }
+      
       .controls {
-        width: 98vw;
-        min-width: 0;
-        max-width: 99vw;
-        padding: 18px 4vw 14px 4vw;
+        margin-bottom: 10px;
+        padding: 12px;
+        gap: 8px;
+      }
+      
+      .preview-area {
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      
+      .preview-card {
+        padding: 12px 8px 8px 8px;
       }
     }
-    @media (max-width: 600px) {
-      h1 { font-size: 1.5rem; }
-      .subtitle { font-size: 0.95rem; }
-      .controls label { font-size: 0.95rem; }
-      .preview-card { padding: 16px 2vw 10px 2vw; }
+    
+    /* 大屏幕优化 */
+    @media (min-width: 1200px) {
+      .preview-area {
+        gap: 50px;
+      }
+      
+      .controls {
+        width: 450px;
+      }
     }
   </style>
 </head>
@@ -195,32 +385,57 @@
   <div class="subtitle">一键生成高清 16:9 / 9:16 视频封面，支持自定义标题、按钮、颜色和样式</div>
 
   <div class="controls">
-    <label>标题文字 <input type="text" id="titleText" value="悟空软件开发记" /></label>
-    <label>标题颜色 <input type="color" id="titleColor" value="#FFFFFF" /></label>
-    <label>标题字号 <input type="number" id="titleFontSize" value="30" min="10" max="200" /></label>
-    <label>按钮文字 <input type="text" id="buttonText" value="每周一个电脑小技巧" /></label>
-    <label>按钮颜色 <input type="color" id="buttonColor" value="#FF9933" /></label>
-    <label>按钮文字颜色 <input type="color" id="buttonTextColor" value="#000000" /></label>
-    <label>按钮字号 <input type="number" id="buttonFontSize" value="30" min="10" max="100" /></label>
-    <label>按钮内边距 <input type="number" id="buttonPadding" value="40" min="0" max="200" /></label>
-    <label>背景颜色 <input type="color" id="bgColor" value="#000000" /></label>
+    <label>
+      <span>标题文字</span>
+      <input type="text" id="titleText" value="悟空软件开发记" />
+    </label>
+    <label class="label-row">
+      <span>标题颜色</span>
+      <input type="color" id="titleColor" value="#FFFFFF" />
+    </label>
+    <label class="label-row">
+      <span>标题字号</span>
+      <input type="number" id="titleFontSize" value="30" min="10" max="200" />
+    </label>
+    <label>
+      <span>按钮文字</span>
+      <input type="text" id="buttonText" value="每周一个电脑小技巧" />
+    </label>
+    <label class="label-row">
+      <span>按钮颜色</span>
+      <input type="color" id="buttonColor" value="#FF9933" />
+    </label>
+    <label class="label-row">
+      <span>按钮文字颜色</span>
+      <input type="color" id="buttonTextColor" value="#000000" />
+    </label>
+    <label class="label-row">
+      <span>按钮字号</span>
+      <input type="number" id="buttonFontSize" value="30" min="10" max="100" />
+    </label>
+    <label class="label-row">
+      <span>按钮内边距</span>
+      <input type="number" id="buttonPadding" value="40" min="0" max="200" />
+    </label>
+    <label class="label-row">
+      <span>背景颜色</span>
+      <input type="color" id="bgColor" value="#000000" />
+    </label>
     <button id="updateCanvasBtn">更新封面预览</button>
   </div>
 
-  <div class="preview-area">
-    <div class="preview-card">
-      <div class="card-title">16:9 封面预览</div>
-      <canvas id="canvas169" width="800" height="450" style="width: 320px; height: 180px;"></canvas>
-      <button id="download169">下载 16:9 封面</button>
-      <div id="imgContainer169"></div>
-    </div>
-    <div class="preview-card">
-      <div class="card-title">9:16 封面预览</div>
-      <canvas id="canvas916" width="450" height="800" style="width: 180px; height: 320px;"></canvas>
-      <button id="download916">下载 9:16 封面</button>
-      <div id="imgContainer916"></div>
-    </div>
-  </div>
+            <div class="preview-area">
+        <div class="preview-card">
+          <div class="card-title">16:9 封面预览</div>
+          <canvas id="canvas169" width="800" height="450"></canvas>
+          <button id="download169">下载 16:9 封面</button>
+        </div>
+        <div class="preview-card">
+          <div class="card-title">9:16 封面预览</div>
+          <canvas id="canvas916" width="450" height="800"></canvas>
+          <button id="download916">下载 9:16 封面</button>
+        </div>
+      </div>
 
   <script>
     // 高清缩放因子
@@ -238,11 +453,34 @@
       bgColorElem: document.getElementById('bgColor'),
     };
 
+    // 移动端优化：防止双击缩放
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    // 移动端优化：防止页面缩放
+    document.addEventListener('gesturestart', function (e) {
+      e.preventDefault();
+    });
+    document.addEventListener('gesturechange', function (e) {
+      e.preventDefault();
+    });
+    document.addEventListener('gestureend', function (e) {
+      e.preventDefault();
+    });
+
     function setCanvasSize(canvas, w, h) {
+      // 设置canvas的实际像素尺寸（用于高清渲染）
       canvas.width = w * scale;
       canvas.height = h * scale;
-      canvas.style.width = w + 'px';
-      canvas.style.height = h + 'px';
+      // 不设置内联样式，让CSS控制显示尺寸
+      // canvas.style.width = w + 'px';
+      // canvas.style.height = h + 'px';
     }
 
     function drawRoundedRect(ctx, x, y, width, height, radius) {
@@ -329,51 +567,94 @@
       }
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: 'image/png' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      
+      // 移动端兼容性处理
+      if (navigator.userAgent.match(/iPhone|iPad|iPod|Android/i)) {
+        // 移动端：分享或保存到相册
+        if (navigator.share) {
+          navigator.share({
+            title: filename,
+            files: [new File([blob], filename, { type: 'image/png' })]
+          }).catch(console.error);
+        } else {
+          // 备用方案：在新窗口打开图片
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+      } else {
+        // 桌面端：直接下载
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     }
 
     // 事件绑定
     document.getElementById('updateCanvasBtn').addEventListener('click', updateAllCanvases);
+    document.getElementById('updateCanvasBtn').addEventListener('touchend', updateAllCanvases);
+    
+    // 移动端优化：使用 touchend 事件
     document.querySelectorAll('.controls input').forEach(input => {
       input.addEventListener('input', updateAllCanvases);
+      input.addEventListener('change', updateAllCanvases);
+    });
+    
+    // 移动端优化：防止输入框缩放
+    document.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+      input.addEventListener('focus', function() {
+        if (window.innerWidth <= 768) {
+          setTimeout(() => {
+            window.scrollTo(0, this.offsetTop - 100);
+          }, 300);
+        }
+      });
     });
 
-    // 下载与预览 16:9
-    document.getElementById('download169').addEventListener('click', () => {
+    // 下载 16:9
+    const download169 = () => {
       const canvas = document.getElementById('canvas169');
       const imageDataURL = canvas.toDataURL('image/png');
-      const img = document.createElement('img');
-      img.src = imageDataURL;
-      img.alt = '16:9 封面';
-      img.style.maxWidth = '320px';
-      img.style.height = 'auto';
-      document.getElementById('imgContainer169').innerHTML = '';
-      document.getElementById('imgContainer169').appendChild(img);
       saveImg(imageDataURL, 'cover_16x9.png');
-    });
-    // 下载与预览 9:16
-    document.getElementById('download916').addEventListener('click', () => {
+    };
+    
+    document.getElementById('download169').addEventListener('click', download169);
+    document.getElementById('download169').addEventListener('touchend', download169);
+    
+    // 下载 9:16
+    const download916 = () => {
       const canvas = document.getElementById('canvas916');
       const imageDataURL = canvas.toDataURL('image/png');
-      const img = document.createElement('img');
-      img.src = imageDataURL;
-      img.alt = '9:16 封面';
-      img.style.maxWidth = '180px';
-      img.style.height = 'auto';
-      document.getElementById('imgContainer916').innerHTML = '';
-      document.getElementById('imgContainer916').appendChild(img);
       saveImg(imageDataURL, 'cover_9x16.png');
-    });
+    };
+    
+    document.getElementById('download916').addEventListener('click', download916);
+    document.getElementById('download916').addEventListener('touchend', download916);
 
     // 初始化
     updateAllCanvases();
+    
+    // 确保画布在页面加载完成后正确显示
+    window.addEventListener('load', function() {
+      // 延迟一帧重新绘制，确保CSS样式已应用
+      requestAnimationFrame(() => {
+        updateAllCanvases();
+      });
+    });
+    
+    // 窗口大小改变时重新绘制
+    window.addEventListener('resize', function() {
+      // 防抖处理
+      clearTimeout(window.resizeTimer);
+      window.resizeTimer = setTimeout(() => {
+        updateAllCanvases();
+      }, 100);
+    });
   </script>
 
 </body>
